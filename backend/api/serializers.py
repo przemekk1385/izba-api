@@ -16,7 +16,7 @@ class MarkdownField(serializers.Field):
 
 
 class AttachmentsSerializer(serializers.ModelSerializer):
-    """Entity serializer."""
+    """Attachments serializer."""
 
     class Meta:
         """Meta."""
@@ -26,7 +26,7 @@ class AttachmentsSerializer(serializers.ModelSerializer):
 
 
 class EntitiesSerializer(serializers.ModelSerializer):
-    """Entity serializer."""
+    """Entities serializer."""
 
     class Meta:
         """Meta."""
