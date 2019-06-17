@@ -1,11 +1,17 @@
-from rest_framework import viewsets
+from pathlib import Path
+
+from django.core.files.storage import default_storage
+from rest_framework import status, views, viewsets
+from rest_framework.parsers import MultiPartParser
+from rest_framework.response import Response
 
 from .models import Attachment, Entity, Post, TYPES_ENTITIES
 from .serializers import (AttachmentsSerializer,
                           EntitiesSerializer,
-                          PostsListSerializer,
-                          PostsBaseSerializer,
-                          PostsMarkdownifySerializer)
+                          PostsSerializer,
+                          PostsSerializerList,
+                          PostsSerializerMarkdownifyContent,
+                          PostsSerializerUseUploadedHeader)
 
 
 class _Choices(object):
@@ -26,6 +32,21 @@ class _Choices(object):
             return [c[0] for c in self._choices if c[1] == value][0]
         except IndexError:
             return -1
+
+
+class UploadView(views.APIView):
+    """API endpoint for file upload."""
+
+    parser_classes = (MultiPartParser, )
+
+    def put(self, request, format=None):
+        """PUT method."""
+        file_obj = request.data['file']
+        filename = Path('tmp') / '{}'.format(file_obj.name)
+        with default_storage.open(filename.as_posix(), 'wb+') as destination:
+            for chunk in file_obj.chunks():
+                destination.write(chunk)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class AttachmentsViewset(viewsets.ModelViewSet):
@@ -68,10 +89,17 @@ class PostsViewset(viewsets.ModelViewSet):
     def get_serializer_class(self):
         """Pick serializer class."""
         if self.action == 'list':
-            return PostsListSerializer
-        return PostsMarkdownifySerializer\
-            if 'markdownify' in self.request.query_params\
-            else PostsBaseSerializer
+            serializer = PostsSerializerList
+        else:
+            if self.request.data.get('header', None)\
+                and isinstance(self.request.data['header'],
+                               str):
+                serializer = PostsSerializerUseUploadedHeader
+            elif 'markdownify' in self.request.query_params:
+                serializer = PostsSerializerMarkdownifyContent
+            else:
+                serializer = PostsSerializer
+        return serializer
 
     def get_queryset(self):
         """Filtering."""

@@ -1,5 +1,4 @@
 """backend URL Configuration
-
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/2.2/topics/http/urls/
 Examples:
@@ -18,13 +17,11 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
-from .api.router import router
-
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('markdownx/', include('markdownx.urls')),
-    path('api/', include(router.urls)),
+    path('api/', include('backend.api.urls')),
     path('api/auth/', include('djoser.urls.authtoken')),
 ]\
     + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)\

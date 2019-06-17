@@ -1,12 +1,11 @@
 from datetime import datetime
-from pathlib import Path
-from uuid import uuid4
 
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.utils.deconstruct import deconstructible
 from django.utils.html import escape
 from markdownx.models import MarkdownxField
+
+from .utils.uuid4path import Uuid4Path
 
 
 CURRENT_DATE = datetime.now()
@@ -25,23 +24,12 @@ def no_unsafe(value):
         )
 
 
-@deconstructible
-class Uuid4Path(object):
-    """Unique upload path."""
-
-    def __call__(self, instance, filename):
-        """Implement call operator."""
-        return Path('{}.{}'.format(uuid4(),
-                                   filename.split('.')[-1])).as_posix()
-
-
 class Post(models.Model):
     """Post model."""
 
     title = models.CharField(max_length=100, validators=[no_unsafe])
     content = MarkdownxField()
     header = models.ImageField(blank=True, null=True, upload_to=Uuid4Path())
-    featured = models.ImageField(blank=True, null=True, upload_to=Uuid4Path())
     slider = models.BooleanField(null=False, default=False)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -90,8 +78,8 @@ class Attachment(models.Model):
 class EventDetails(models.Model):
     """Event details model."""
 
-    start = models.DateTimeField()
-    end = models.DateTimeField()
+    start = models.DateTimeField(blank=True)
+    end = models.DateTimeField(blank=True)
     place = models.CharField(blank=True, max_length=100, null=True,
                              validators=[no_unsafe])
     # relationships

@@ -1,6 +1,10 @@
-import json
+from pathlib import Path
+import io
+import mimetypes
 
-from django.shortcuts import get_object_or_404
+from django.conf import settings
+from django.db import IntegrityError
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from rest_framework import serializers
 from markdownx.utils import markdownify
 
@@ -41,44 +45,33 @@ class EventDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         """Meta."""
 
-        fields = ('id', 'start', 'end', 'place')
+        fields = ('start', 'end', 'place')
         model = EventDetails
+        read_only_fields = ('post', )
 
 
 class EventParticipantsSerializer(serializers.ModelSerializer):
     """EventParticipants serializer."""
 
+    id = serializers.IntegerField(required=False)
+
     class Meta:
         """Meta."""
 
-        depth = 1
         fields = ('id', 'label', 'entities')
         model = EventParticipants
+        read_only_fields = ('post', )
 
 
-class PostsListSerializer(serializers.ModelSerializer):
-    """Posts /list/ serializer for client and administration panel."""
-
-    class Meta:
-        """Meta."""
-
-        depth = 1
-        fields = ('id', 'title', 'header', 'slider', 'created', 'updated',
-                  'eventdetails')
-        model = Post
-
-
-class PostsBaseSerializer(serializers.ModelSerializer):
+class PostsSerializer(serializers.ModelSerializer):
     """Posts serializer for administration panel."""
 
     attachment_set = AttachmentsSerializer(many=True,
-                                           required=False)
+                                           read_only=True)
     eventdetails = EventDetailsSerializer(many=False,
                                           required=False)
-    eventdetails_data = serializers.CharField(required=False)
     eventparticipants_set = EventParticipantsSerializer(many=True,
                                                         required=False)
-    eventparticipants_set_data = serializers.CharField(required=False)
 
     class Meta:
         """Meta."""
@@ -88,104 +81,125 @@ class PostsBaseSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """Create instance."""
+        eventdetails = validated_data\
+            .pop('eventdetails', {})
+        eventparticipants_set = validated_data\
+            .pop('eventparticipants_set', [])
+        post_instance = Post.objects.create(**validated_data)
         try:
-            ed_data = json.loads(  # ed stands for eventdetails
-                validated_data.pop('eventdetails_data')
-            )
-        except KeyError:
-            ed_data = None
-        try:
-            ep_set_data = json.loads(  # ep stands for eventparticipants
-                validated_data.pop('eventparticipants_set_data')
-            )
-        except KeyError:
-            ep_set_data = []
-        post = Post.objects.create(**validated_data)
-        if ed_data:
-            EventDetails.objects.create(post=post, **ed_data)
-        for ep_data in ep_set_data:
-            self._eventparticipants_create(post, ep_data)
-        return post
+            EventDetails.objects.create(post=post_instance,
+                                        **eventdetails)
+        except IntegrityError:
+            pass  # seems there is no eventdetails
+        for eventparticipants in eventparticipants_set:
+            entities = eventparticipants.pop('entities')
+            ep = EventParticipants.objects.create(post=post_instance,
+                                                  **eventparticipants)
+            ep.entities.add(*entities)
+        return post_instance
 
-    def update(self, post, validated_data):
+    def update(self, post_instance, validated_data):
         """Update instance."""
-        # ed stands for eventdetails
-        ed_data = self._pop_data(validated_data,
-                                 'eventdetails_data')
-        # ep stands for eventparticipants
-        ep_set_data = self._pop_data(validated_data,
-                                     'eventparticipants_set_data')
-        self._object_update(post, validated_data)
-        post.save()
-        if ed_data:
-            try:
-                self._object_update(post.eventdetails, ed_data)
-            except EventDetails.DoesNotExist:
-                EventDetails.objects.create(post=post, **ed_data)
-            else:
-                post.eventdetails.save()
-        if ep_set_data:
-            ep_in_data = [ep['id'] for ep in ep_set_data if 'id' in ep.keys()]
-            ep_in_base = post.eventparticipants_set.values_list('id',
-                                                                flat=True)
-            # handle deleted
-            self._objects_delete(EventParticipants,
-                                 set(ep_in_base).difference(ep_in_data))
-            for ep_data in ep_set_data:
-                try:
-                    ep = EventParticipants.objects.get(id=ep_data['id'])
-                except EventParticipants.DoesNotExist:  # faulty id - ignore
-                    pass
-                except KeyError:  # new entry - create
-                    self._eventparticipants_create(post, ep_data)
-                else:  # change entry
-                    entities = self._entities_get_or_404(ep_data)
-                    self._object_update(ep, ep_data)
-                    # get ids from data and database
-                    ep.entities.set(entities)
-                    ep.save()
-        return post
-
-    def _entities_get_or_404(self, data):
-        return [get_object_or_404(Entity, id=id)
-                for id
-                in self._pop_data(data, 'entities', default=[], JSON=False)]
-
-    def _eventparticipants_create(self, post, ep_data):
-        entities = self._entities_get_or_404(ep_data)
-        ep = EventParticipants.objects.create(post=post, **ep_data)
-        ep.entities.add(*entities)
-
-    def _object_update(self, obj, data):
-        for field in data.keys():
-            setattr(obj, field, data[field])
-
-    def _objects_delete(self, model, ids):
-        for id in ids:
-            try:
-                model.objects.filter(id=id).delete()
-            except model.DoesNotExist:  # ignore already deleted
-                pass
-
-    def _pop_data(self, dict, key, default={}, JSON=True):
+        eventdetails = validated_data\
+            .pop('eventdetails', {})
+        eventparticipants_set = validated_data\
+            .pop('eventparticipants_set', [])
+        post_instance.title = validated_data.get('title',
+                                                 post_instance.title)
+        post_instance.content = validated_data.get('content',
+                                                   post_instance.content)
+        post_instance.save()
         try:
-            data = dict.pop(key)
-        except KeyError:
-            return default
+            eventdetails_instance = post_instance.eventdetails
+        except EventDetails.DoesNotExist:
+            try:
+                EventDetails.objects.create(post=post_instance,
+                                            **eventdetails)
+            except IntegrityError:
+                pass  # seems there is no eventdetails
         else:
-            return json.loads(data) if JSON else data
+            eventdetails_instance.start = eventdetails\
+                .get('start', eventdetails_instance.start)
+            eventdetails_instance.end = eventdetails\
+                .get('end', eventdetails_instance.end)
+            eventdetails_instance.place = eventdetails\
+                .get('place', eventdetails_instance.place)
+            eventdetails_instance.save()
+        # deleted eventparticipants
+        for id in set(
+            post_instance.eventparticipants_set.values_list('id',
+                                                            flat=True)
+        ).difference([
+            ep['id'] for ep in eventparticipants_set if 'id' in ep.keys()
+        ]):
+            EventParticipants.objects.filter(id=id).delete()
+        # added / updated eventparticipants
+        for ep in eventparticipants_set:  # ep stands for eventparticipants
+            entities = ep.pop('entities', [])
+            try:
+                ep_instance = EventParticipants.objects.get(id=ep['id'])
+            except KeyError:  # new entry - create
+                ep_instance = EventParticipants\
+                    .objects\
+                    .create(post=post_instance, **ep)
+                ep_instance.entities.add(*entities)
+            else:  # change entry
+                ep_instance.label = ep.get('label',
+                                           ep_instance.label)
+                ep_instance.entities.set(entities)
+                ep_instance.save()
+        return post_instance
 
 
-class PostsMarkdownifySerializer(serializers.ModelSerializer):
+class PostsSerializerMarkdownifyContent(PostsSerializer):
     """Posts serializer for client."""
 
     content = MarkdownField(read_only=True)
-    attachment_set = AttachmentsSerializer(many=True)
-    eventdetails = EventDetailsSerializer(many=False)
-    eventparticipants_set = EventParticipantsSerializer(many=True)
+
+
+class PostsSerializerUseUploadedHeader(PostsSerializer):
+    """Posts serializer for already uploaded header."""
+
+    header = serializers.CharField()
+
+    def _to_inmemoryuploadedfile(self, validated_data):
+        with open((Path(settings.MEDIA_ROOT)
+                   / 'tmp'
+                   / validated_data['header']).as_posix(),
+                  'rb') as image:
+            uploaded_image = InMemoryUploadedFile(
+                file=io.BytesIO(image.read()),
+                field_name=None,
+                name=validated_data['header'],
+                content_type=mimetypes.guess_type(validated_data['header']),
+                size=image.tell(),
+                charset=None
+            )
+            validated_data.update({
+                    'header': uploaded_image,
+            })
+        Path(image.name).unlink()
+        return validated_data
+
+    def create(self, validated_data):
+        """Create instance."""
+        return super(self.__class__, self)\
+            .create(self._to_inmemoryuploadedfile(validated_data))
+
+    def update(self, post_instance, validated_data):
+        """Update instance."""
+        return super(self.__class__, self)\
+            .update(post_instance,
+                    self._to_inmemoryuploadedfile(validated_data))
+
+
+class PostsSerializerList(serializers.ModelSerializer):
+    """Posts /list/ serializer for client and administration panel."""
 
     class Meta:
         """Meta."""
 
+        depth = 1
+        fields = ('id', 'title', 'header', 'slider', 'created', 'updated',
+                  'eventdetails')
         model = Post
-        fields = ('__all__')
