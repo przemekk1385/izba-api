@@ -108,6 +108,10 @@ class PostsSerializer(serializers.ModelSerializer):
                                                  post_instance.title)
         post_instance.content = validated_data.get('content',
                                                    post_instance.content)
+        post_instance.header = validated_data.get('header',
+                                                  post_instance.header)
+        post_instance.slider = validated_data.get('slider',
+                                                  post_instance.slider)
         post_instance.save()
         try:
             eventdetails_instance = post_instance.eventdetails
