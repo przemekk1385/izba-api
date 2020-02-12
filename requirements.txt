@@ -1,7 +1,7 @@
 certifi==2019.3.9
 chardet==3.0.4
 colorama==0.4.1
-Django==2.2.1
+Django==2.2.10
 django-cors-headers==3.0.1
 django-markdownx==2.0.28
 django-templated-mail==1.1.1
