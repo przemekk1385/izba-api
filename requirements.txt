@@ -7,9 +7,11 @@ django-markdownx==2.0.28
 django-templated-mail==1.1.1
 djangorestframework==3.9.4
 djoser==1.5.1
+gunicorn==20.1.0
 httpie==1.0.2
 idna==2.8
 Markdown==3.1.1
+mysqlclient==2.0.3
 Pillow==6.0.0
 Pygments==2.4.0
 pytz==2019.1
