@@ -20,7 +20,7 @@ RUN useradd -ms /bin/bash backend
 WORKDIR /usr/local/src/app
 
 COPY ./requirements.txt .
-COPY ./*.py .
+COPY ./*.py ./
 COPY ./backend ./backend
 COPY ./entrypoint.prod.sh .
 
