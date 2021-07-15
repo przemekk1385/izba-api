@@ -6,6 +6,7 @@ services:
     restart: on-failure
     volumes:
       - static_volume:/usr/local/src/app/static
+      - media_volume:/usr/local/src/app/media
     ports:
       - 1300:80
     depends_on:
@@ -21,12 +22,15 @@ services:
     environment:
       DB_HOST: db
       DB_PORT: 3306
+      SECRET_KEY: ${SECRET_KEY}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
     ports:
       - 8000:8000
     depends_on:
       - db
     volumes:
       - static_volume:/usr/local/src/app/static
+      - media_volume:/usr/local/src/app/media
   db:
     image: mariadb
     restart: always
@@ -36,3 +40,4 @@ services:
 
 volumes:
   static_volume:
+  media_volume:
