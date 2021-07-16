@@ -1,8 +1,10 @@
 certifi==2019.3.9
 chardet==3.0.4
 colorama==0.4.1
+dj-database-url==0.5.0
 Django==2.2.1
 django-cors-headers==3.0.1
+django-environ==0.4.5
 django-markdownx==2.0.28
 django-templated-mail==1.1.1
 djangorestframework==3.9.4
@@ -13,6 +15,7 @@ idna==2.8
 Markdown==3.1.1
 mysqlclient==2.0.3
 Pillow==6.0.0
+psycopg2-binary==2.9.1
 Pygments==2.4.0
 pytz==2019.1
 requests==2.21.0

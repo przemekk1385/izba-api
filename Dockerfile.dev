@@ -15,20 +15,12 @@ RUN git config --global user.name "${GIT_USER_NAME}"
 ARG GIT_USER_EMAIL
 RUN git config --global user.email ${GIT_USER_EMAIL}
 
-RUN useradd -ms /bin/bash backend
+WORKDIR code
 
-WORKDIR /usr/local/src/app
-
-COPY ./requirements.txt .
-COPY ./*.py ./
-COPY ./backend ./backend
-COPY ./entrypoint.prod.sh .
+COPY . /code/
 
 RUN pip install -r requirements.txt
 
-RUN chown -R backend:backend /usr/local/src/app
-USER backend
-
 EXPOSE 8000
 
-ENTRYPOINT ["/usr/local/src/app/entrypoint.prod.sh"]
+ENTRYPOINT ["/code/entrypoint.dev.sh"]
