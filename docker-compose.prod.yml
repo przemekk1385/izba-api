@@ -1,16 +1,14 @@
 version: "3"
 services:
-  web:
+  proxy:
     build:
-      context: ./web
-    restart: on-failure
+      context: ./proxy
+    restart: always
     volumes:
       - static_volume:/usr/local/src/app/static
       - media_volume:/usr/local/src/app/media
     ports:
       - 1300:80
-    depends_on:
-      - app
   app:
     build:
       context: .
@@ -28,6 +26,7 @@ services:
       - 8000:8000
     depends_on:
       - db
+      - proxy
     volumes:
       - static_volume:/usr/local/src/app/static
       - media_volume:/usr/local/src/app/media

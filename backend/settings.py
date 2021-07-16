@@ -24,7 +24,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 env = environ.Env(
     DEBUG=(bool, False),
-    ALLOWED_HOSTS=(list, ["127.0.0.1"]),
+    ALLOWED_HOSTS=(list, ["localhost", "127.0.0.1"]),
 )
 env.read_env(env.str("./", ".env"))
 
