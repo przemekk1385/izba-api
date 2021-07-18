@@ -10,6 +10,8 @@ services:
     environment:
       DB_HOST: db
       DB_PORT: 3306
+      SECRET_KEY: ${SECRET_KEY}
+      DEBUG: 1
     ports:
       - 8000:8000
     depends_on:

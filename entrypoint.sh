@@ -7,6 +7,6 @@ do
 done
 
 python ./manage.py migrate
-python ./manage.py runserver 0.0.0.0:8000
+python ./manage.py collectstatic --no-input
 
-#tail -f /var/log/apt/term.log
+exec "$@"

@@ -6,10 +6,9 @@ __pycache__
 
 !.gitignore
 !Dockerfile.dev
-!Dockerfile.prod
 !README.md
 !docker-compose.dev.yml
-!docker-compose.prod.yml
+!docker-compose.yml
 !entrypoint.dev.sh
 !entrypoint.prod.sh
 !requirements.txt

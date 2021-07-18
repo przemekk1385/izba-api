@@ -20,10 +20,10 @@ WORKDIR /usr/local/src/app
 COPY ./requirements.txt .
 COPY ./*.py ./
 COPY ./backend ./backend
-COPY ./entrypoint.prod.sh .
+COPY ./entrypoint.sh .
 
 RUN pip install -r requirements.txt
 
 EXPOSE 8000
 
-ENTRYPOINT ["/usr/local/src/app/entrypoint.prod.sh"]
+ENTRYPOINT ["/usr/local/src/app/entrypoint.sh"]
