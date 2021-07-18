@@ -35,7 +35,10 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
+    volumes:
+      - db_volume:/var/lib/mysql
 
 volumes:
   static_volume:
   media_volume:
+  db_volume:
