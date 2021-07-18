@@ -1,5 +1,7 @@
 *.*
 __pycache__
+media
+static
 
 !*.py
 !*.conf
@@ -12,5 +14,3 @@ __pycache__
 !entrypoint.dev.sh
 !entrypoint.prod.sh
 !requirements.txt
-
-local_settings.py
