@@ -2,7 +2,7 @@ Django==2.2.1
 django-cors-headers==3.0.1
 django-environ==0.4.5
 django-markdownx==2.0.28
-djangorestframework==3.9.4
+djangorestframework==3.11.2
 djoser==1.5.1
 gunicorn==20.1.0
 psycopg2-binary==2.8.6
