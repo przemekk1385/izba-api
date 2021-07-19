@@ -21,6 +21,7 @@ COPY ./requirements.txt .
 COPY ./*.py ./
 COPY ./backend ./backend
 COPY ./entrypoint.sh .
+COPY ./.env .
 
 RUN pip install -r requirements.txt
 
