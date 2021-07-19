@@ -25,6 +25,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 env = environ.Env(
     DEBUG=(bool, False),
     ALLOWED_HOSTS=(list, ["localhost", "127.0.0.1"]),
+    CORS_ORIGIN_WHITELIST=(list, []),
 )
 env.read_env(env.str("./", ".env"))
 
@@ -172,3 +173,9 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ),
 }
+
+
+# django-cors-headers
+# https://github.com/adamchainz/django-cors-headers
+
+CORS_ORIGIN_WHITELIST = env.list('CORS_ORIGIN_WHITELIST')
