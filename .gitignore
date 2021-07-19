@@ -1,6 +1,7 @@
 *.*
 __pycache__
 media
+postgres
 static
 
 !*.py
