@@ -6,6 +6,7 @@ static
 !*.py
 !*.conf
 
+!.env.bak
 !.gitignore
 !Dockerfile.dev
 !README.md
