@@ -178,4 +178,5 @@ REST_FRAMEWORK = {
 # django-cors-headers
 # https://github.com/adamchainz/django-cors-headers
 
-CORS_ORIGIN_WHITELIST = env('CORS_ORIGIN_WHITELIST')
+CORS_ORIGIN_WHITELIST = env.list('CORS_ORIGIN_WHITELIST')
+
