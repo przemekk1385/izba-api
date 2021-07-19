@@ -6,7 +6,7 @@ services:
     restart: always
     volumes:
       - static_volume:/usr/local/src/app/static
-      - ./media:/usr/local/src/app/media
+      - media_volume:/usr/local/src/app/media
     ports:
       - 1300:80
   app:
