@@ -1,11 +1,9 @@
 *.*
 __pycache__
 media
-postgres
 static
 
 !*.py
-!*.conf
 
 !.env.bak
 !.gitignore
@@ -14,5 +12,5 @@ static
 !docker-compose.dev.yml
 !docker-compose.yml
 !entrypoint.dev.sh
-!entrypoint.prod.sh
+!entrypoint.sh
 !requirements.txt
